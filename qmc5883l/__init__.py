@@ -81,7 +81,7 @@ class QMC5883L(object):
         """
         if self.bus.read_byte_data(self.adress, REG_CHIP_ID) != 0xff:
             print("Wrong Chip ID, are you shure this is the correct Chip?")
-        self.set_config(self)
+        self.set_config()
 
     def set_config(self):
         if self.cont_mode:
