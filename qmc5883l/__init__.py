@@ -95,11 +95,10 @@ class QMC5883L(object):
         self.cntrl_reg2 = self.cntrl_reg2 + self.restore * (2 ** 7)
         self.bus.write_byte_data(self.adress, REG_CONF_1, self.cntrl_reg1)
         self.bus.write_byte_data(self.adress, REG_CONF_2, self.cntrl_reg2)
-        
+
     def get_temp(self):
         return self.bus.read_byte_data(self.adress, REG_TEMP_MSB) * 2.56 + self.bus.read_byte_data(self.adress, REG_TEMP_LSB) / 100
-    
+
     def get_magnet(self):
-        self.read_byte_data(self.adress, REG_OUT_X_LSB)
-        return [0 0 0]
-        
+        data = self.bus.read_i2c_block_data(self.adress, REG_OUT_X_MSB, 6)
+        return data
