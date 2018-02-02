@@ -41,6 +41,7 @@ REG_CONF_1 = 0x09
 REG_CONF_2 = 0x0a
 REG_RST_PERIOD = 0x0b
 REG_CHIP_ID = 0x0d
+TEMP_CORR = 47  # Just a first value
 
 
 class QMC5883L(object):
@@ -81,7 +82,7 @@ class QMC5883L(object):
         """
         if self.bus.read_byte_data(self.adress, REG_CHIP_ID) != 0xff:
             print("Wrong Chip ID, are you shure this is the correct Chip?")
-        self.set_config(self)
+        self.set_config()
 
     def set_config(self):
         if self.cont_mode:
@@ -95,3 +96,29 @@ class QMC5883L(object):
         self.cntrl_reg2 = self.cntrl_reg2 + self.restore * (2 ** 7)
         self.bus.write_byte_data(self.adress, REG_CONF_1, self.cntrl_reg1)
         self.bus.write_byte_data(self.adress, REG_CONF_2, self.cntrl_reg2)
+
+    def get_temp(self):
+        # TODO: noch sehr unschön und zu lang!!!
+        data = self.bus.read_i2c_block_data(self.adress, REG_TEMP_LSB, 2)
+        temp = ((data[1] << 8) + data[0])
+        if temp > (2 ** 15) - 1:
+            temp = temp - (2 ** 16)
+        return temp / 100 + TEMP_CORR
+
+    def _convert_data(self, data, offset):
+        if self.full_scale:
+            max_mag = 8
+        else:
+            max_mag = 2
+        magval = ((data[offset + 1] << 8) + data[offset])
+        if magval > (2 ** 15) - 1:
+            magval = magval - (2 ** 16)
+        magval = magval * max_mag / 2 ** 15
+        return magval
+
+    def get_magnet(self):
+        data = self.bus.read_i2c_block_data(self.adress, REG_OUT_X_LSB, 6)
+        x = self._convert_data(data, REG_OUT_X_LSB)
+        y = self._convert_data(data, REG_OUT_Y_LSB)
+        z = self._convert_data(data, REG_OUT_Z_LSB)
+        return [x, y, z]
