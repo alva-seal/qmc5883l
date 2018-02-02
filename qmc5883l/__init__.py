@@ -41,6 +41,7 @@ REG_CONF_1 = 0x09
 REG_CONF_2 = 0x0a
 REG_RST_PERIOD = 0x0b
 REG_CHIP_ID = 0x0d
+TEMP_CORR = 47
 
 
 class QMC5883L(object):
@@ -99,20 +100,20 @@ class QMC5883L(object):
     def get_temp(self):
         # TODO: noch sehr unschön und zu lang!!!
         data = self.bus.read_i2c_block_data(self.adress, REG_TEMP_LSB, 2)
-        print(data)
-        print(bin(data))
-        temp = ((data[1] << 8) + data[0])/100
-        return temp
+        temp = ((data[1] << 8) + data[0])
+        if temp > (2 ** 15) - 1:
+            temp = temp - (2 ** 16)
+        return temp / 100 + TEMP_CORR
 
     def _convert_data(self, data, offset):
-        print(data, offset)
         if self.full_scale:
             max_mag = 8
         else:
             max_mag = 2
-        magval = ((data[offset + 1] << 8) + data[offset]) * max_mag / 2 ** 15
+        magval = ((data[offset + 1] << 8) + data[offset])
         if magval > (2 ** 15) - 1:
             magval = magval - (2 ** 16)
+        magval = magval * max_mag / 2 ** 15
         return magval
 
     def get_magnet(self):
