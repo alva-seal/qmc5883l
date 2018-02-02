@@ -41,7 +41,7 @@ REG_CONF_1 = 0x09
 REG_CONF_2 = 0x0a
 REG_RST_PERIOD = 0x0b
 REG_CHIP_ID = 0x0d
-TEMP_CORR = 47
+TEMP_CORR = 47  # Just a first value
 
 
 class QMC5883L(object):
