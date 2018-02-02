@@ -101,15 +101,19 @@ class QMC5883L(object):
         return self.bus.read_byte_data(self.adress, REG_TEMP_MSB) * 2.56 + self.bus.read_byte_data(self.adress, REG_TEMP_LSB) / 100
 
     def _convert_data(self, data, offset):
+        print(data, offset)
         if self.full_scale:
             max_mag = 8
         else:
             max_mag = 2
-        return (data[offset] << 8 + data[offset + 1]) * max_mag / 2 ** 12
+        magval = ((data[offset + 1] << 8) + data[offset]) # * max_mag / 2 ** 12
+        if magval > (2 ** 15) - 1:
+            magval = magval - (2 ** 16)
+        return magval
 
     def get_magnet(self):
-        data = self.bus.read_i2c_block_data(self.adress, REG_OUT_X_MSB, 6)
-        x = self._convert_data(data, REG_OUT_X_MSB)
-        y = self._convert_data(data, REG_OUT_Y_MSB)
-        z = self._convert_data(data, REG_OUT_Z_MSB)
+        data = self.bus.read_i2c_block_data(self.adress, REG_OUT_X_LSB, 6)
+        x = self._convert_data(data, REG_OUT_X_LSB)
+        y = self._convert_data(data, REG_OUT_Y_LSB)
+        z = self._convert_data(data, REG_OUT_Z_LSB)
         return [x, y, z]
