@@ -99,6 +99,8 @@ class QMC5883L(object):
     def get_temp(self):
         # TODO: noch sehr unschön und zu lang!!!
         data = self.bus.read_i2c_block_data(self.adress, REG_TEMP_LSB, 2)
+        print(data)
+        print(bin(data))
         temp = ((data[1] << 8) + data[0])/100
         return temp
 
