@@ -98,7 +98,9 @@ class QMC5883L(object):
 
     def get_temp(self):
         # TODO: noch sehr unschön und zu lang!!!
-        return self.bus.read_byte_data(self.adress, REG_TEMP_MSB) * 2.56 + self.bus.read_byte_data(self.adress, REG_TEMP_LSB) / 100
+        data = self.bus.read_i2c_block_data(self.adress, REG_TEMP_LSB, 2)
+        temp = ((data[1] << 8) + data[0])/100
+        return temp
 
     def _convert_data(self, data, offset):
         print(data, offset)
@@ -106,7 +108,7 @@ class QMC5883L(object):
             max_mag = 8
         else:
             max_mag = 2
-        magval = ((data[offset + 1] << 8) + data[offset]) # * max_mag / 2 ** 12
+        magval = ((data[offset + 1] << 8) + data[offset]) * max_mag / 2 ** 15
         if magval > (2 ** 15) - 1:
             magval = magval - (2 ** 16)
         return magval
